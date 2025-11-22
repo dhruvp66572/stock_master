@@ -9,6 +9,7 @@ import {
     Package,
     ArrowDownToLine,
     ArrowUpFromLine,
+    ArrowRightLeft,
     Settings,
     LogOut,
     User,
@@ -37,6 +38,11 @@ const navigation = [
         name: "Deliveries",
         href: "/dashboard/deliveries",
         icon: ArrowUpFromLine,
+    },
+    {
+        name: "Move History",
+        href: "/dashboard/move-history",
+        icon: ArrowRightLeft,
     },
     {
         name: "Settings",
