@@ -78,12 +78,12 @@ model Category {
 model Warehouse {
   id               String          @id @default(cuid())
   name             String          @unique
-  shortCode        String          @unique  // ADD THIS LINE
+  shortCode        String?          @unique  
   location         String?
   isActive         Boolean         @default(true)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
-  locations        Location[]      // ADD THIS LINE
+  locations        Location[]      
   products         Product[]
   receipts         Receipt[]
   deliveries       Delivery[]
@@ -91,10 +91,8 @@ model Warehouse {
   transfersTo      Transfer[]      @relation("ToWarehouse")
   stockMovements   StockMovement[]
 
-  @@index([shortCode])  // ADD THIS LINE
+  @@index([shortCode]) 
 }
-
-// Add this Location model after Warehouse
 
 model Location {
   id          String    @id @default(cuid())

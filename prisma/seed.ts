@@ -75,6 +75,7 @@ async function main() {
       update: {},
       create: {
         name: "Main Warehouse",
+        shortCode: "WH001",
         location: "New York, NY",
         isActive: true,
       },
@@ -84,6 +85,7 @@ async function main() {
       update: {},
       create: {
         name: "West Coast Hub",
+        shortCode: "WH002",
         location: "Los Angeles, CA",
         isActive: true,
       },
@@ -93,6 +95,7 @@ async function main() {
       update: {},
       create: {
         name: "Central Distribution",
+        shortCode: "WH003",
         location: "Chicago, IL",
         isActive: true,
       },
@@ -102,6 +105,7 @@ async function main() {
       update: {},
       create: {
         name: "East Coast Facility",
+        shortCode: "WH004",
         location: "Boston, MA",
         isActive: true,
       },
@@ -109,6 +113,52 @@ async function main() {
   ]);
 
   console.log(`Created ${warehouses.length} warehouses`);
+
+  // Create Locations
+  const locations = await Promise.all([
+    prisma.location.upsert({
+      where: { shortCode: "LOC001" },
+      update: {},
+      create: {
+        name: "Zone A",
+        shortCode: "LOC001",
+        warehouseId: warehouses[0].id,
+        isActive: true,
+      },
+    }),
+    prisma.location.upsert({
+      where: { shortCode: "LOC002" },
+      update: {},
+      create: {
+        name: "Zone B",
+        shortCode: "LOC002",
+        warehouseId: warehouses[0].id,
+        isActive: true,
+      },
+    }),
+    prisma.location.upsert({
+      where: { shortCode: "LOC003" },
+      update: {},
+      create: {
+        name: "Storage Room 1",
+        shortCode: "LOC003",
+        warehouseId: warehouses[1].id,
+        isActive: true,
+      },
+    }),
+    prisma.location.upsert({
+      where: { shortCode: "LOC004" },
+      update: {},
+      create: {
+        name: "Loading Dock",
+        shortCode: "LOC004",
+        warehouseId: warehouses[2].id,
+        isActive: true,
+      },
+    }),
+  ]);
+
+  console.log(`Created ${locations.length} locations`);
 
   // Create sample products
   const products = await Promise.all([
