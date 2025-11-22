@@ -1,177 +1,72 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { prisma } from "@/lib/prisma";
-import { productSchema } from "@/lib/validations/product";
+// app/api/products/route.ts
 
-export async function GET(request: Request) {
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get('search');
+    const categoryId = searchParams.get('categoryId');
+    const warehouseId = searchParams.get('warehouseId');
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search");
-    const categoryId = searchParams.get("categoryId");
-
-    // Build where clause
-    const where: any = {};
-
-    if (search) {
-      where.sku = {
-        contains: search,
-        mode: "insensitive",
-      };
-    }
-
-    if (categoryId && categoryId !== "all") {
-      where.categoryId = categoryId;
-    }
-
-    // Query products
     const products = await prisma.product.findMany({
-      where,
+      where: {
+        AND: [
+          search ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { sku: { contains: search, mode: 'insensitive' } },
+            ],
+          } : {},
+          categoryId ? { categoryId } : {},
+          warehouseId ? { warehouseId } : {},
+        ],
+      },
       include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        warehouse: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        category: true,
+        warehouse: true,
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
-    // Compute stock status for each product
-    const productsWithStatus = products.map((product: any) => {
-      let stockStatus: "out" | "low" | "ok" = "ok";
-
-      if (product.stock === 0) {
-        stockStatus = "out";
-      } else if (
-        product.minStockLevel !== null &&
-        product.stock <= product.minStockLevel
-      ) {
-        stockStatus = "low";
-      }
-
-      return {
-        ...product,
-        stockStatus,
-      };
-    });
-
-    return NextResponse.json(productsWithStatus);
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch products" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, data: products });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const body = await req.json();
+    const { name, sku, description, categoryId, unitOfMeasure, stock, minStockLevel, warehouseId } = body;
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await request.json();
-
-    // Validate request body
-    const validation = productSchema.safeParse(body);
-    if (!validation.success) {
+    if (!name || !sku || !categoryId || !unitOfMeasure || !warehouseId) {
       return NextResponse.json(
-        { error: "Validation failed", details: validation.error.errors },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    const data = validation.data;
-
-    // Check if SKU already exists
-    const existingSku = await prisma.product.findUnique({
-      where: { sku: data.sku },
-    });
-
-    if (existingSku) {
-      return NextResponse.json(
-        { error: "A product with this SKU already exists" },
-        { status: 409 }
-      );
-    }
-
-    // Verify category exists
-    const category = await prisma.category.findUnique({
-      where: { id: data.categoryId },
-    });
-
-    if (!category) {
-      return NextResponse.json(
-        { error: "Category not found" },
-        { status: 404 }
-      );
-    }
-
-    // Verify warehouse exists
-    const warehouse = await prisma.warehouse.findUnique({
-      where: { id: data.warehouseId },
-    });
-
-    if (!warehouse) {
-      return NextResponse.json(
-        { error: "Warehouse not found" },
-        { status: 404 }
-      );
-    }
-
-    // Create product
     const product = await prisma.product.create({
       data: {
-        name: data.name,
-        sku: data.sku,
-        description: data.description || null,
-        categoryId: data.categoryId,
-        unitOfMeasure: data.unitOfMeasure,
-        stock: data.stock ?? 0,
-        minStockLevel: data.minStockLevel ?? null,
-        warehouseId: data.warehouseId,
+        name,
+        sku,
+        description,
+        categoryId,
+        unitOfMeasure,
+        stock: stock || 0,
+        minStockLevel,
+        warehouseId,
       },
       include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        warehouse: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        category: true,
+        warehouse: true,
       },
     });
 
-    return NextResponse.json(product, { status: 201 });
-  } catch (error) {
-    console.error("Error creating product:", error);
-    return NextResponse.json(
-      { error: "Failed to create product" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, data: product }, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -1,28 +1,20 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+// app/api/deliveries/[id]/route.ts
+
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
-  request: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const id = params.id;
-
     const delivery = await prisma.delivery.findUnique({
-      where: { id },
+      where: { id: params.id },
       include: {
-        warehouse: {
-          select: {
-            id: true,
-            name: true,
+        warehouse: true,
+        items: {
+          include: {
+            product: true,
           },
         },
         user: {
@@ -30,19 +22,6 @@ export async function GET(
             id: true,
             name: true,
             email: true,
-          },
-        },
-        items: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
-                stock: true,
-                unitOfMeasure: true,
-              },
-            },
           },
         },
       },
@@ -55,148 +34,82 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(delivery);
-  } catch (error) {
-    console.error("Error fetching delivery:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch delivery" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true, data: delivery });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function PUT(
-  request: Request,
+export async function PATCH(
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const body = await req.json();
+    const { status, customerName, warehouseId, notes, userId } = body;
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const id = params.id;
-    const body = await request.json();
-    const { status } = body;
-
-    // Validate status
-    const validStatuses = ["DRAFT", "READY", "DONE", "CANCELED"];
-    if (!status || !validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: "Invalid status" },
-        { status: 400 }
-      );
-    }
-
-    // Fetch delivery
-    const delivery = await prisma.delivery.findUnique({
-      where: { id },
-    });
-
-    if (!delivery) {
-      return NextResponse.json(
-        { error: "Delivery not found" },
-        { status: 404 }
-      );
-    }
-
-    // Validate status transitions
-    if (delivery.status === "DONE" || delivery.status === "CANCELED") {
-      return NextResponse.json(
-        { error: "Cannot modify completed or canceled deliveries" },
-        { status: 400 }
-      );
-    }
-
-    // Update delivery status
-    const updatedDelivery = await prisma.delivery.update({
-      where: { id },
-      data: { status },
+    const delivery = await prisma.delivery.update({
+      where: { id: params.id },
+      data: {
+        ...(status && { status }),
+        ...(customerName && { customerName }),
+        ...(warehouseId && { warehouseId }),
+        ...(notes !== undefined && { notes }),
+        ...(status === "DONE" && { deliveredAt: new Date() }),
+      },
       include: {
-        warehouse: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
         items: {
           include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
-                stock: true,
-                unitOfMeasure: true,
-              },
-            },
+            product: true,
           },
         },
+        warehouse: true,
       },
     });
 
-    return NextResponse.json(updatedDelivery);
-  } catch (error) {
-    console.error("Error updating delivery:", error);
-    return NextResponse.json(
-      { error: "Failed to update delivery" },
-      { status: 500 }
-    );
+    // If status changed to DONE, update stock
+    if (status === "DONE" && userId) {
+      for (const item of delivery.items) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+
+        // Create stock movement
+        await prisma.stockMovement.create({
+          data: {
+            productId: item.productId,
+            warehouseId: delivery.warehouseId,
+            type: "DELIVERY",
+            quantity: -item.quantity,
+            referenceId: delivery.id,
+            userId: userId,
+          },
+        });
+      }
+    }
+
+    return NextResponse.json({ success: true, data: delivery });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function DELETE(
-  request: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const id = params.id;
-
-    // Fetch delivery
-    const delivery = await prisma.delivery.findUnique({
-      where: { id },
-    });
-
-    if (!delivery) {
-      return NextResponse.json(
-        { error: "Delivery not found" },
-        { status: 404 }
-      );
-    }
-
-    // Only DRAFT deliveries can be deleted
-    if (delivery.status !== "DRAFT") {
-      return NextResponse.json(
-        { error: "Only DRAFT deliveries can be deleted" },
-        { status: 400 }
-      );
-    }
-
-    // Delete delivery (cascade deletes items)
     await prisma.delivery.delete({
-      where: { id },
+      where: { id: params.id },
     });
 
-    return NextResponse.json({ message: "Delivery deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting delivery:", error);
-    return NextResponse.json(
-      { error: "Failed to delete delivery" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
