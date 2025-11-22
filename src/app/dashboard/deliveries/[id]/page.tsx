@@ -37,15 +37,15 @@ export default function DeliveryDetailPage() {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(!isNew);
-  const [warehouses, setWarehouses] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     customerName: "",
     warehouseId: "",
     notes: "",
     status: "DRAFT",
   });
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [quantity, setQuantity] = useState("");
 
