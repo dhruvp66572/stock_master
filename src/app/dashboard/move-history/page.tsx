@@ -21,10 +21,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, CheckCircle, XCircle, Loader2, List, LayoutGrid, ArrowRight } from "lucide-react";
+import { Plus, Search, CheckCircle, XCircle, Loader2, List, LayoutGrid, ArrowRight, Eye, Printer } from "lucide-react";
 import { TransferFormDialog } from "@/components/transfers/transfer-form-dialog";
 import { CompleteTransferDialog } from "@/components/transfers/complete-transfer-dialog";
 import { CancelTransferDialog } from "@/components/transfers/cancel-transfer-dialog";
+import { TransferDetailsDialog } from "@/components/transfers/transfer-details-dialog";
 import type { TransferListItem, Transfer } from "@/types/transfer";
 import type { Warehouse } from "@/types/dashboard";
 
@@ -48,6 +49,7 @@ export default function MoveHistoryPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
 
   const fetchTransfers = useCallback(async () => {
@@ -108,6 +110,14 @@ export default function MoveHistoryPage() {
 
   const handleCreateSuccess = () => {
     fetchTransfers();
+  };
+
+  const handleViewClick = async (transfer: TransferListItem) => {
+    const fullTransfer = await fetchTransferDetails(transfer.id);
+    if (fullTransfer) {
+      setSelectedTransfer(fullTransfer);
+      setDetailsDialogOpen(true);
+    }
   };
 
   const handleCompleteClick = async (transfer: TransferListItem) => {
@@ -325,6 +335,14 @@ export default function MoveHistoryPage() {
                         <TableCell>{formatDate(transfer.createdAt)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewClick(transfer)}
+                            >
+                              <Eye className="mr-1 h-3 w-3" />
+                              View
+                            </Button>
                             {(transfer.status === "DRAFT" || transfer.status === "IN_TRANSIT") && (
                               <Button
                                 size="sm"
@@ -420,8 +438,20 @@ export default function MoveHistoryPage() {
                             {formatDate(transfer.createdAt)}
                           </div>
 
+                          <div className="flex gap-2 pt-2 border-t">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 h-8"
+                              onClick={() => handleViewClick(transfer)}
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              View
+                            </Button>
+                          </div>
+
                           {(status === "DRAFT" || status === "IN_TRANSIT") && (
-                            <div className="flex gap-2 pt-2 border-t">
+                            <div className="flex gap-2 pt-1">
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -473,6 +503,12 @@ export default function MoveHistoryPage() {
         onOpenChange={setCancelDialogOpen}
         transfer={selectedTransfer}
         onSuccess={handleCancelSuccess}
+      />
+
+      <TransferDetailsDialog
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+        transfer={selectedTransfer}
       />
     </div>
   );
