@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
         "/deliveries",
         "/settings",
         "/profile",
+        "/api/dashboard",
     ];
 
     // Check if the current path is a protected route
@@ -49,5 +50,6 @@ export const config = {
         "/settings/:path*",
         "/profile/:path*",
         "/auth/:path*",
+        "/api/dashboard/:path*",
     ],
 };
