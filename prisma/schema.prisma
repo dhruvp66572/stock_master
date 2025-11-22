@@ -78,17 +78,38 @@ model Category {
 model Warehouse {
   id               String          @id @default(cuid())
   name             String          @unique
+  shortCode        String          @unique  // ADD THIS LINE
   location         String?
   isActive         Boolean         @default(true)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
+  locations        Location[]      // ADD THIS LINE
   products         Product[]
   receipts         Receipt[]
   deliveries       Delivery[]
   transfersFrom    Transfer[]      @relation("FromWarehouse")
   transfersTo      Transfer[]      @relation("ToWarehouse")
   stockMovements   StockMovement[]
+
+  @@index([shortCode])  // ADD THIS LINE
 }
+
+// Add this Location model after Warehouse
+
+model Location {
+  id          String    @id @default(cuid())
+  name        String
+  shortCode   String    @unique
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("locations")
+  @@index([warehouseId])
+}
+
 
 model Product {
   id             String          @id @default(cuid())
