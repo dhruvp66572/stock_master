@@ -19,7 +19,8 @@ enum UserRole {
 
 enum ReceiptStatus {
   DRAFT
-  VALIDATED
+  READY
+  DONE
   CANCELED
 }
 
