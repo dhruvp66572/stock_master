@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { productSchema, type ProductFormData } from "@/lib/validations/product";
 import type { Product } from "@/types/product";
 import type { Category, Warehouse } from "@/types/dashboard";
+import { toast } from "sonner";
 
 interface ProductFormDialogProps {
   open: boolean;
@@ -119,12 +120,15 @@ export function ProductFormDialog({
         throw new Error(errorData.error || "Failed to save product");
       }
 
+      const message = mode === "create" ? "Product created successfully" : "Product updated successfully";
+      toast.success(message);
       onSuccess();
       onOpenChange(false);
       reset();
     } catch (err: any) {
       console.error("Error saving product:", err);
       setError(err.message || "Failed to save product");
+      toast.error(err.message || "Failed to save product");
     } finally {
       setLoading(false);
     }
@@ -316,8 +320,8 @@ export function ProductFormDialog({
                   ? "Creating..."
                   : "Updating..."
                 : mode === "create"
-                ? "Create Product"
-                : "Update Product"}
+                  ? "Create Product"
+                  : "Update Product"}
             </Button>
           </DialogFooter>
         </form>

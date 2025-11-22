@@ -32,6 +32,7 @@ import type { ProductListItem } from "@/types/product";
 import type { Category } from "@/types/dashboard";
 import { ProductFormDialog } from "@/components/products/product-form-dialog";
 import { DeleteProductDialog } from "@/components/products/delete-product-dialog";
+import { toast } from "sonner";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<ProductListItem[] | null>(null);
@@ -99,6 +100,7 @@ export default function ProductsPage() {
     } catch (err) {
       console.error("Error fetching products:", err);
       setError("Failed to load products");
+      toast.error("Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -120,8 +122,11 @@ export default function ProductsPage() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = (message?: string) => {
     fetchProducts();
+    if (message) {
+      toast.success(message);
+    }
   };
 
   const getStockBadge = (status: "out" | "low" | "ok") => {

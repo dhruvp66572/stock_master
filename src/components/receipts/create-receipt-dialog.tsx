@@ -58,6 +58,7 @@ export default function CreateReceiptDialog({
     defaultValues: {
       supplierName: "",
       warehouseId: "",
+      scheduleDate: "",
       notes: "",
       items: [{ productId: "", quantity: 1 }],
     },
@@ -158,8 +159,8 @@ export default function CreateReceiptDialog({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label>Supplier Name</Label>
-            <Input {...register("supplierName")} />
+            <Label>Received From</Label>
+            <Input {...register("supplierName")} placeholder="Enter supplier or source" />
             {errors.supplierName && (
               <p className="text-sm text-destructive">
                 {errors.supplierName.message}
@@ -196,6 +197,16 @@ export default function CreateReceiptDialog({
             {errors.warehouseId && (
               <p className="text-sm text-destructive">
                 {errors.warehouseId.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label>Schedule Date (Optional)</Label>
+            <Input type="date" {...register("scheduleDate")} />
+            {errors.scheduleDate && (
+              <p className="text-sm text-destructive">
+                {errors.scheduleDate.message}
               </p>
             )}
           </div>

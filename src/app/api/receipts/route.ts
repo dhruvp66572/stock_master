@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { supplierName, warehouseId, notes, items } = validation.data;
+    const { supplierName, warehouseId, scheduleDate, notes, items } = validation.data;
 
     // Generate receipt number
     const random4 = Math.floor(1000 + Math.random() * 9000);
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
         receiptNumber,
         supplierName,
         warehouseId,
+        scheduleDate: scheduleDate ? new Date(scheduleDate) : null,
         notes,
         userId: session.user?.id as string,
         status: "DRAFT",
@@ -93,7 +94,9 @@ export async function GET(request: Request) {
     const { page, limit } = parsed.data;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = {
+      userId: session.user?.id,
+    };
     if (parsed.data.status) where.status = parsed.data.status;
     if (parsed.data.warehouseId) where.warehouseId = parsed.data.warehouseId;
 

@@ -16,6 +16,7 @@ import {
   MapPinned,
   ChevronDown,
   ChevronRight,
+  Warehouse,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -32,6 +33,11 @@ const navigation = [
     name: "Products",
     href: "/dashboard/products",
     icon: Package,
+  },
+  {
+    name: "Stock",
+    href: "/dashboard/stock",
+    icon: Warehouse,
   },
   {
     name: "Receipts",

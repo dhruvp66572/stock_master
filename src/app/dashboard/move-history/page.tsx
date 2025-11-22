@@ -27,6 +27,7 @@ import { CompleteTransferDialog } from "@/components/transfers/complete-transfer
 import { CancelTransferDialog } from "@/components/transfers/cancel-transfer-dialog";
 import type { TransferListItem, Transfer } from "@/types/transfer";
 import type { Warehouse } from "@/types/dashboard";
+import { toast } from "sonner";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Statuses" },
@@ -66,6 +67,7 @@ export default function MoveHistoryPage() {
       setTransfers(data);
     } catch (error) {
       console.error("Error fetching transfers:", error);
+      toast.error("Failed to fetch transfers");
     } finally {
       setLoading(false);
     }
@@ -108,6 +110,7 @@ export default function MoveHistoryPage() {
 
   const handleCreateSuccess = () => {
     fetchTransfers();
+    toast.success("Transfer created successfully");
   };
 
   const handleCompleteClick = async (transfer: TransferListItem) => {
@@ -115,6 +118,8 @@ export default function MoveHistoryPage() {
     if (fullTransfer) {
       setSelectedTransfer(fullTransfer);
       setCompleteDialogOpen(true);
+    } else {
+      toast.error("Failed to load transfer details");
     }
   };
 
@@ -123,17 +128,21 @@ export default function MoveHistoryPage() {
     if (fullTransfer) {
       setSelectedTransfer(fullTransfer);
       setCancelDialogOpen(true);
+    } else {
+      toast.error("Failed to load transfer details");
     }
   };
 
   const handleCompleteSuccess = () => {
     fetchTransfers();
     setSelectedTransfer(null);
+    toast.success("Transfer completed successfully");
   };
 
   const handleCancelSuccess = () => {
     fetchTransfers();
     setSelectedTransfer(null);
+    toast.success("Transfer cancelled successfully");
   };
 
   const getStatusBadge = (status: string) => {
@@ -400,7 +409,7 @@ export default function MoveHistoryPage() {
                             </span>
                             {getStatusBadge(transfer.status)}
                           </div>
-                          
+
                           <div className="space-y-1">
                             <div className="flex items-center gap-1 text-sm">
                               <span className="font-medium">{transfer.fromWarehouse.name}</span>

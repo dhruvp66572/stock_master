@@ -46,15 +46,17 @@ export async function PATCH(
 ) {
   try {
     const body = await req.json();
-    const { status, customerName, warehouseId, notes, userId } = body;
+    const { status, warehouseId, notes, userId, scheduleDate, deliveryAddress, operationType } = body;
 
     const delivery = await prisma.delivery.update({
       where: { id: params.id },
       data: {
         ...(status && { status }),
-        ...(customerName && { customerName }),
         ...(warehouseId && { warehouseId }),
         ...(notes !== undefined && { notes }),
+        ...(scheduleDate !== undefined && { scheduleDate: scheduleDate ? new Date(scheduleDate) : null }),
+        ...(deliveryAddress !== undefined && { deliveryAddress }),
+        ...(operationType && { operationType }),
         ...(status === "DONE" && { deliveredAt: new Date() }),
       },
       include: {
@@ -67,14 +69,18 @@ export async function PATCH(
       },
     });
 
-    // If status changed to DONE, update stock
+    // If status changed to DONE, update stock based on operation type
     if (status === "DONE" && userId) {
       for (const item of delivery.items) {
+        // Use operationType from updated delivery or from body
+        const operation = delivery.operationType || operationType || "DECREMENT";
+        const isIncrement = operation === "INCREMENT";
+
         await prisma.product.update({
           where: { id: item.productId },
           data: {
             stock: {
-              decrement: item.quantity,
+              [isIncrement ? "increment" : "decrement"]: item.quantity,
             },
           },
         });
@@ -85,7 +91,7 @@ export async function PATCH(
             productId: item.productId,
             warehouseId: delivery.warehouseId,
             type: "DELIVERY",
-            quantity: -item.quantity,
+            quantity: isIncrement ? item.quantity : -item.quantity,
             referenceId: delivery.id,
             userId: userId,
           },

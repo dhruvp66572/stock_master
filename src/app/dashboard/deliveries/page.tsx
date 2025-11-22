@@ -3,7 +3,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Plus, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { DeliveryFormDialog } from "@/components/deliveries/delivery-form-dialog";
+import { DeliveryDetailsDialog } from "@/components/deliveries/delivery-details-dialog";
 
 const statusColors = {
   DRAFT: "bg-gray-500",
@@ -34,16 +35,28 @@ const statusColors = {
 };
 
 export default function DeliveriesPage() {
-  const router = useRouter();
-  const [deliveries, setDeliveries] = useState([]);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const { toast } = useToast();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDeliveries();
+    fetchWarehouses();
   }, [statusFilter, searchTerm]);
+
+  const fetchWarehouses = async () => {
+    try {
+      const response = await fetch("/api/warehouses");
+      const data = await response.json();
+      if (data.success) setWarehouses(data.data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   const fetchDeliveries = async () => {
     try {
@@ -57,11 +70,7 @@ export default function DeliveriesPage() {
       if (data.success) setDeliveries(data.data);
     } catch (error) {
       console.error("Error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch deliveries",
-      });
+      toast.error("Failed to fetch deliveries");
     } finally {
       setLoading(false);
     }
@@ -76,18 +85,21 @@ export default function DeliveriesPage() {
       const data = await response.json();
       if (data.success) {
         fetchDeliveries();
-        toast({
-          title: "Success",
-          description: "Delivery deleted successfully",
-        });
+        toast.success("Delivery deleted successfully");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete delivery",
-      });
+      toast.error("Failed to delete delivery");
     }
+  };
+
+  const handleCreateSuccess = () => {
+    setIsCreateDialogOpen(false);
+    fetchDeliveries();
+    toast.success("Delivery created successfully");
+  };
+
+  const handleView = (deliveryId: string) => {
+    setSelectedDeliveryId(deliveryId);
   };
 
   return (
@@ -99,16 +111,31 @@ export default function DeliveriesPage() {
             Manage outgoing stock deliveries
           </p>
         </div>
-        <Button onClick={() => router.push("/dashboard/deliveries/new")}>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           New Delivery
         </Button>
       </div>
 
+      <DeliveryFormDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={handleCreateSuccess}
+        warehouses={warehouses}
+      />
+
+      {selectedDeliveryId && (
+        <DeliveryDetailsDialog
+          deliveryId={selectedDeliveryId}
+          open={!!selectedDeliveryId}
+          onOpenChange={(open) => !open && setSelectedDeliveryId(null)}
+        />
+      )}
+
       <Card className="p-4">
         <div className="flex gap-4 mb-4">
           <Input
-            placeholder="Search by delivery number or customer..."
+            placeholder="Search by delivery number or address..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
@@ -136,7 +163,8 @@ export default function DeliveriesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Reference</TableHead>
-                <TableHead>Customer</TableHead>
+                <TableHead>Delivery Address</TableHead>
+                <TableHead>Operation Type</TableHead>
                 <TableHead>Scheduled Date</TableHead>
                 <TableHead>Warehouse</TableHead>
                 <TableHead>Status</TableHead>
@@ -146,7 +174,7 @@ export default function DeliveriesPage() {
             <TableBody>
               {deliveries.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12">
+                  <TableCell colSpan={7} className="text-center py-12">
                     <p className="text-muted-foreground">No deliveries found</p>
                   </TableCell>
                 </TableRow>
@@ -156,13 +184,20 @@ export default function DeliveriesPage() {
                     <TableCell className="font-medium">
                       {delivery.deliveryNumber}
                     </TableCell>
-                    <TableCell>{delivery.customerName}</TableCell>
+                    <TableCell>{delivery.deliveryAddress || "N/A"}</TableCell>
                     <TableCell>
-                      {new Date(delivery.createdAt).toLocaleDateString()}
+                      <Badge variant={delivery.operationType === "INCREMENT" ? "default" : "secondary"}>
+                        {delivery.operationType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {delivery.scheduleDate
+                        ? new Date(delivery.scheduleDate).toLocaleDateString()
+                        : "Not scheduled"}
                     </TableCell>
                     <TableCell>{delivery.warehouse?.name}</TableCell>
                     <TableCell>
-                      <Badge className={statusColors[delivery.status]}>
+                      <Badge className={statusColors[delivery.status as keyof typeof statusColors]}>
                         {delivery.status}
                       </Badge>
                     </TableCell>
@@ -171,9 +206,7 @@ export default function DeliveriesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() =>
-                            router.push(`/dashboard/deliveries/${delivery.id}`)
-                          }
+                          onClick={() => handleView(delivery.id)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>

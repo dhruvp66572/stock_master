@@ -20,7 +20,9 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Plus, Eye, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import CreateReceiptDialog from "@/components/receipts/create-receipt-dialog";
+import { ReceiptDetailsDialog } from "@/components/receipts/receipt-details-dialog";
 import type {
   ReceiptStatus,
   DashboardFilters,
@@ -58,6 +60,8 @@ export default function ReceiptsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedReceiptId, setSelectedReceiptId] = useState<string | null>(null);
 
   const hasActiveFilters =
     filterState.status !== "all" || filterState.warehouseId !== "all";
@@ -128,6 +132,11 @@ export default function ReceiptsPage() {
     setReloadToken((t) => t + 1);
   };
 
+  const handleView = (id: string) => {
+    setSelectedReceiptId(id);
+    setViewDialogOpen(true);
+  };
+
   const handleValidate = async (id: string) => {
     try {
       setLoading(true);
@@ -138,11 +147,12 @@ export default function ReceiptsPage() {
         const err = await res.json().catch(() => null);
         throw new Error(err?.error || "Failed to validate receipt");
       }
+      toast.success("Receipt validated successfully");
       // Refresh list
       refresh();
     } catch (err: any) {
       console.error("Validation error:", err);
-      setError(err?.message || "Failed to validate receipt");
+      toast.error(err?.message || "Failed to validate receipt");
     } finally {
       setLoading(false);
     }
@@ -151,6 +161,7 @@ export default function ReceiptsPage() {
   const handleCancel = async (id: string) => {
     // Placeholder for future cancel implementation
     console.log("Cancel receipt", id);
+    toast.info("Cancel functionality coming soon");
   };
 
   const onPrev = () => {
@@ -183,12 +194,6 @@ export default function ReceiptsPage() {
           </Button>
         </div>
       </div>
-
-      <CreateReceiptDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSuccess={refresh}
-      />
 
       {/* Filters */}
       <Card>
@@ -312,7 +317,11 @@ export default function ReceiptsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleView(r.id)}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                         {r.status === "DRAFT" && (
@@ -391,6 +400,22 @@ export default function ReceiptsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <CreateReceiptDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={() => {
+          refresh();
+          toast.success("Receipt created successfully");
+        }}
+      />
+
+      <ReceiptDetailsDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        receiptId={selectedReceiptId}
+      />
     </div>
   );
 }

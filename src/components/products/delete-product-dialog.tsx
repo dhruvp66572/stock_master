@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import type { Product } from "@/types/product";
+import { toast } from "sonner";
 
 interface DeleteProductDialogProps {
   open: boolean;
@@ -45,11 +46,13 @@ export function DeleteProductDialog({
         throw new Error(errorData.error || "Failed to delete product");
       }
 
+      toast.success("Product deleted successfully");
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
       console.error("Error deleting product:", err);
       setError(err.message || "Failed to delete product");
+      toast.error(err.message || "Failed to delete product");
     } finally {
       setLoading(false);
     }

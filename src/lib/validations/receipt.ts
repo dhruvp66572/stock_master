@@ -6,8 +6,9 @@ import { z } from "zod";
 export const createReceiptSchema = z.object({
   supplierName: z
     .string()
-    .min(2, "Supplier name must be at least 2 characters"),
+    .min(2, "Received from must be at least 2 characters"),
   warehouseId: z.string().cuid("Invalid warehouse id"),
+  scheduleDate: z.string().optional(),
   notes: z.string().optional(),
   items: z
     .array(

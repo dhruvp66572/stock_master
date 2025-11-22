@@ -56,9 +56,10 @@ export function DeliveryFormDialog({
   } = useForm<DeliveryFormData>({
     resolver: zodResolver(deliverySchema),
     defaultValues: {
-      customerName: "",
-      customerId: null,
       warehouseId: "",
+      scheduleDate: "",
+      deliveryAddress: "",
+      operationType: "DECREMENT",
       notes: null,
       items: [{ productId: "", quantity: 1 }],
     },
@@ -149,32 +150,6 @@ export function DeliveryFormDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Customer Name */}
-            <div className="space-y-2">
-              <Label htmlFor="customerName">
-                Customer Name <span className="text-destructive">*</span>
-              </Label>
-              <Input id="customerName" {...register("customerName")} />
-              {errors.customerName && (
-                <p className="text-sm text-destructive">
-                  {errors.customerName.message}
-                </p>
-              )}
-            </div>
-
-            {/* Customer ID */}
-            <div className="space-y-2">
-              <Label htmlFor="customerId">Customer ID</Label>
-              <Input id="customerId" {...register("customerId")} placeholder="Optional" />
-              {errors.customerId && (
-                <p className="text-sm text-destructive">
-                  {errors.customerId.message}
-                </p>
-              )}
-            </div>
-          </div>
-
           {/* Warehouse */}
           <div className="space-y-2">
             <Label htmlFor="warehouseId">
@@ -201,6 +176,60 @@ export function DeliveryFormDialog({
             {errors.warehouseId && (
               <p className="text-sm text-destructive">
                 {errors.warehouseId.message}
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Schedule Date */}
+            <div className="space-y-2">
+              <Label htmlFor="scheduleDate">Schedule Date (Optional)</Label>
+              <Input type="date" id="scheduleDate" {...register("scheduleDate")} />
+              {errors.scheduleDate && (
+                <p className="text-sm text-destructive">
+                  {errors.scheduleDate.message}
+                </p>
+              )}
+            </div>
+
+            {/* Operation Type */}
+            <div className="space-y-2">
+              <Label htmlFor="operationType">
+                Operation Type <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={watch("operationType") || "DECREMENT"}
+                onValueChange={(value) => {
+                  setValue("operationType", value as "INCREMENT" | "DECREMENT", { shouldValidate: true });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select operation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DECREMENT">Decrement Stock (Outgoing)</SelectItem>
+                  <SelectItem value="INCREMENT">Increment Stock (Incoming/Return)</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.operationType && (
+                <p className="text-sm text-destructive">
+                  {errors.operationType.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Delivery Address */}
+          <div className="space-y-2">
+            <Label htmlFor="deliveryAddress">Delivery Address</Label>
+            <Textarea
+              id="deliveryAddress"
+              {...register("deliveryAddress")}
+              placeholder="Enter delivery address"
+            />
+            {errors.deliveryAddress && (
+              <p className="text-sm text-destructive">
+                {errors.deliveryAddress.message}
               </p>
             )}
           </div>

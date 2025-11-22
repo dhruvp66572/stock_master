@@ -9,17 +9,12 @@ export const deliveryItemSchema = z.object({
 });
 
 export const deliverySchema = z.object({
-  customerName: z
-    .string()
-    .min(2, "Customer name must be at least 2 characters")
-    .max(100, "Customer name must not exceed 100 characters"),
-  customerId: z
-    .string()
-    .cuid("Invalid customer ID")
-    .optional()
-    .nullable()
-    .or(z.literal("")),
   warehouseId: z.string().cuid("Invalid warehouse ID"),
+  scheduleDate: z.string().optional(),
+  deliveryAddress: z.string().optional(),
+  operationType: z.enum(["DECREMENT", "INCREMENT"], {
+    errorMap: () => ({ message: "Operation type must be DECREMENT or INCREMENT" }),
+  }),
   notes: z
     .string()
     .max(500, "Notes must not exceed 500 characters")

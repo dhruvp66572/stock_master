@@ -98,8 +98,8 @@ export async function GET(request: Request) {
                 where: deliveryStatus ? deliveryFilters : { status: "DRAFT" },
             }),
 
-            // Internal transfers (stock movements)
-            prisma.stockMovement.count({
+            // Internal transfers
+            prisma.transfer.count({
                 where: {
                     ...(warehouseId && {
                         OR: [
