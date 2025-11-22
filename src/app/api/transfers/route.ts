@@ -18,7 +18,9 @@ export async function GET(request: Request) {
     const toWarehouseId = searchParams.get("toWarehouseId");
     const search = searchParams.get("search");
 
-    const where: any = {};
+    const where: any = {
+      userId: session.user?.id,
+    };
 
     if (status && status !== "all") {
       where.status = status;

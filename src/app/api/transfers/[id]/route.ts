@@ -16,8 +16,11 @@ export async function GET(
 
         const id = params.id;
 
-        const transfer = await prisma.transfer.findUnique({
-            where: { id },
+        const transfer = await prisma.transfer.findFirst({
+            where: {
+                id,
+                userId: session.user?.id,
+            },
             include: {
                 fromWarehouse: {
                     select: {

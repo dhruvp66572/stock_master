@@ -2,9 +2,17 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search");
     const categoryId = searchParams.get("categoryId");
@@ -15,11 +23,11 @@ export async function GET(req: NextRequest) {
         AND: [
           search
             ? {
-                OR: [
-                  { name: { contains: search, mode: "insensitive" } },
-                  { sku: { contains: search, mode: "insensitive" } },
-                ],
-              }
+              OR: [
+                { name: { contains: search, mode: "insensitive" } },
+                { sku: { contains: search, mode: "insensitive" } },
+              ],
+            }
             : {},
           categoryId ? { categoryId } : {},
           warehouseId ? { warehouseId } : {},
@@ -40,6 +48,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const {
       name,

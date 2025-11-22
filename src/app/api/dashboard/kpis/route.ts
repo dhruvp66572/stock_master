@@ -26,7 +26,9 @@ export async function GET(request: Request) {
             productFilters.categoryId = categoryId;
         }
 
-        const receiptFilters: any = {};
+        const receiptFilters: any = {
+            userId: session.user?.id,
+        };
         if (receiptStatus && warehouseId) {
             receiptFilters.status = receiptStatus;
             receiptFilters.warehouseId = warehouseId;
@@ -36,7 +38,9 @@ export async function GET(request: Request) {
             receiptFilters.warehouseId = warehouseId;
         }
 
-        const deliveryFilters: any = {};
+        const deliveryFilters: any = {
+            userId: session.user?.id,
+        };
         if (deliveryStatus && warehouseId) {
             deliveryFilters.status = deliveryStatus;
             deliveryFilters.warehouseId = warehouseId;
@@ -90,17 +94,18 @@ export async function GET(request: Request) {
 
             // Pending receipts (DRAFT status)
             prisma.receipt.count({
-                where: receiptStatus ? receiptFilters : { status: "DRAFT" },
+                where: receiptStatus ? receiptFilters : { status: "DRAFT", userId: session.user?.id },
             }),
 
             // Pending deliveries (DRAFT status)
             prisma.delivery.count({
-                where: deliveryStatus ? deliveryFilters : { status: "DRAFT" },
+                where: deliveryStatus ? deliveryFilters : { status: "DRAFT", userId: session.user?.id },
             }),
 
             // Internal transfers
             prisma.transfer.count({
                 where: {
+                    userId: session.user?.id,
                     ...(warehouseId && {
                         OR: [
                             { fromWarehouseId: warehouseId },

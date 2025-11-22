@@ -2,14 +2,25 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const delivery = await prisma.delivery.findUnique({
-      where: { id: params.id },
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const delivery = await prisma.delivery.findFirst({
+      where: {
+        id: params.id,
+        userId: session.user.id,
+      },
       include: {
         warehouse: true,
         items: {
@@ -45,11 +56,20 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { status, warehouseId, notes, userId, scheduleDate, deliveryAddress, operationType } = body;
 
     const delivery = await prisma.delivery.update({
-      where: { id: params.id },
+      where: {
+        id: params.id,
+        userId: session.user.id,
+      },
       data: {
         ...(status && { status }),
         ...(warehouseId && { warehouseId }),
@@ -110,8 +130,17 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     await prisma.delivery.delete({
-      where: { id: params.id },
+      where: {
+        id: params.id,
+        userId: session.user.id,
+      },
     });
 
     return NextResponse.json({ success: true });

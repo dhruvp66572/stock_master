@@ -14,8 +14,11 @@ export async function GET(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const receipt = await prisma.receipt.findUnique({
-            where: { id: params.id },
+        const receipt = await prisma.receipt.findFirst({
+            where: {
+                id: params.id,
+                userId: session.user?.id,
+            },
             include: {
                 warehouse: {
                     select: {
