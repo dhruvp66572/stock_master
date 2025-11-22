@@ -1,4 +1,4 @@
-// app/dashboard/settings/locations/page.tsx
+// app/dashboard/settings/warehouses/page.tsx
 
 "use client";
 
@@ -20,20 +20,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-export default function LocationsPage() {
-  const [locations, setLocations] = useState([]);
+export default function WarehousesPage() {
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -41,13 +33,12 @@ export default function LocationsPage() {
   const [formData, setFormData] = useState({
     name: "",
     shortCode: "",
-    warehouseId: "",
+    location: "",
   });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchWarehouses();
-    fetchLocations();
   }, []);
 
   const fetchWarehouses = async () => {
@@ -57,20 +48,10 @@ export default function LocationsPage() {
       if (data.success) setWarehouses(data.data);
     } catch (error) {
       console.error("Error:", error);
-    }
-  };
-
-  const fetchLocations = async () => {
-    try {
-      const response = await fetch("/api/locations");
-      const data = await response.json();
-      if (data.success) setLocations(data.data);
-    } catch (error) {
-      console.error("Error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch locations",
+        description: "Failed to fetch warehouses",
       });
     } finally {
       setLoading(false);
@@ -80,7 +61,9 @@ export default function LocationsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = editingId ? `/api/locations/${editingId}` : "/api/locations";
+      const url = editingId
+        ? `/api/warehouses/${editingId}`
+        : "/api/warehouses";
       const method = editingId ? "PATCH" : "POST";
 
       const response = await fetch(url, {
@@ -91,11 +74,11 @@ export default function LocationsPage() {
 
       const data = await response.json();
       if (data.success) {
-        fetchLocations();
+        fetchWarehouses();
         closeModal();
         toast({
           title: "Success",
-          description: `Location ${
+          description: `Warehouse ${
             editingId ? "updated" : "created"
           } successfully`,
         });
@@ -110,19 +93,19 @@ export default function LocationsPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to save location",
+        description: "Failed to save warehouse",
       });
     }
   };
 
   const handleEdit = async (id) => {
-    const response = await fetch(`/api/locations/${id}`);
+    const response = await fetch(`/api/warehouses/${id}`);
     const data = await response.json();
     if (data.success) {
       setFormData({
         name: data.data.name || "",
         shortCode: data.data.shortCode || "",
-        warehouseId: data.data.warehouseId || "",
+        location: data.data.location || "",
       });
       setEditingId(id);
       setShowModal(true);
@@ -130,17 +113,17 @@ export default function LocationsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this location?")) return;
+    if (!confirm("Delete this warehouse?")) return;
     try {
-      const response = await fetch(`/api/locations/${id}`, {
+      const response = await fetch(`/api/warehouses/${id}`, {
         method: "DELETE",
       });
       const data = await response.json();
       if (data.success) {
-        fetchLocations();
+        fetchWarehouses();
         toast({
           title: "Success",
-          description: "Location deleted successfully",
+          description: "Warehouse deleted successfully",
         });
       } else {
         toast({
@@ -153,7 +136,7 @@ export default function LocationsPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete location",
+        description: "Failed to delete warehouse",
       });
     }
   };
@@ -161,21 +144,21 @@ export default function LocationsPage() {
   const closeModal = () => {
     setShowModal(false);
     setEditingId(null);
-    setFormData({ name: "", shortCode: "", warehouseId: "" });
+    setFormData({ name: "", shortCode: "", location: "" });
   };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">location</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Warehouse</h1>
           <p className="text-muted-foreground">
-            Manage storage locations within warehouses
+            Manage warehouse locations and settings
           </p>
         </div>
         <Button onClick={() => setShowModal(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Location
+          Add Warehouse
         </Button>
       </div>
 
@@ -190,38 +173,38 @@ export default function LocationsPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Short Code</TableHead>
-                <TableHead>Warehouse</TableHead>
+                <TableHead>Address</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {locations.length === 0 ? (
+              {warehouses.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-12">
-                    <p className="text-muted-foreground">No locations found</p>
+                    <p className="text-muted-foreground">No warehouses found</p>
                   </TableCell>
                 </TableRow>
               ) : (
-                locations.map((location) => (
-                  <TableRow key={location.id}>
+                warehouses.map((warehouse) => (
+                  <TableRow key={warehouse.id}>
                     <TableCell className="font-medium">
-                      {location.name}
+                      {warehouse.name}
                     </TableCell>
-                    <TableCell>{location.shortCode}</TableCell>
-                    <TableCell>{location.warehouse?.name || "-"}</TableCell>
+                    <TableCell>{warehouse.shortCode}</TableCell>
+                    <TableCell>{warehouse.location || "-"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleEdit(location.id)}
+                          onClick={() => handleEdit(warehouse.id)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(location.id)}
+                          onClick={() => handleDelete(warehouse.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -239,7 +222,7 @@ export default function LocationsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingId ? "Edit Location" : "Create Location"}
+              {editingId ? "Edit Warehouse" : "Create Warehouse"}
             </DialogTitle>
           </DialogHeader>
 
@@ -253,7 +236,7 @@ export default function LocationsPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                placeholder="Enter location name"
+                placeholder="Enter warehouse name"
               />
             </div>
 
@@ -271,25 +254,15 @@ export default function LocationsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="warehouse">warehouse</Label>
-              <Select
-                required
-                value={formData.warehouseId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, warehouseId: value })
+              <Label htmlFor="location">Address</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="WH" />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouses.map((wh) => (
-                    <SelectItem key={wh.id} value={wh.id}>
-                      {wh.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Enter address"
+              />
             </div>
 
             <DialogFooter>
