@@ -39,16 +39,23 @@ enum MovementType {
 
 // Models
 model User {
-  id             String          @id @default(cuid())
-  email          String          @unique
-  password       String
-  name           String?
-  role           UserRole        @default(STAFF)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  receipts       Receipt[]
-  deliveries     Delivery[]
-  stockMovements StockMovement[]
+  id               String          @id @default(cuid())
+  email            String          @unique
+  password         String
+  name             String?
+  role             UserRole        @default(STAFF)
+  isActive         Boolean         @default(true)
+  emailVerified    DateTime?
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  receipts         Receipt[]
+  deliveries       Delivery[]
+  stockMovements   StockMovement[]
+
+  @@index([email])
+  @@index([resetToken])
 }
 
 model Category {
