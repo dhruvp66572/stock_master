@@ -107,7 +107,8 @@ export default function CreateReceiptDialog({
         const res = await fetch(`/api/products?${params.toString()}`);
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
-        setProducts(data.products || []);
+        console.log("Fetched products:", data);
+        setProducts(data.data || []);
       } catch (err) {
         console.error(err);
       } finally {

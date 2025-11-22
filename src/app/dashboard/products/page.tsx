@@ -89,10 +89,13 @@ export default function ProductsPage() {
         params.append("categoryId", filters.categoryId);
 
       const response = await fetch(`/api/products?${params}`);
+
+      console.log(response);
+
       if (!response.ok) throw new Error("Failed to fetch products");
 
       const data = await response.json();
-      setProducts(data);
+      setProducts(data.data || []);
     } catch (err) {
       console.error("Error fetching products:", err);
       setError("Failed to load products");

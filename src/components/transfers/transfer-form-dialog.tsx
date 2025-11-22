@@ -87,7 +87,7 @@ export function TransferFormDialog({
       const response = await fetch(`/api/products?warehouseId=${warehouseId}`);
       if (!response.ok) throw new Error("Failed to fetch products");
       const data = await response.json();
-      setProducts(data);
+      setProducts(data.data || []);
     } catch (err) {
       console.error("Error fetching products:", err);
     } finally {
@@ -170,8 +170,8 @@ export function TransferFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {warehouses.map((warehouse) => (
-                    <SelectItem 
-                      key={warehouse.id} 
+                    <SelectItem
+                      key={warehouse.id}
                       value={warehouse.id}
                       disabled={warehouse.id === selectedToWarehouseId}
                     >
@@ -206,8 +206,8 @@ export function TransferFormDialog({
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((warehouse) => (
-                      <SelectItem 
-                        key={warehouse.id} 
+                      <SelectItem
+                        key={warehouse.id}
                         value={warehouse.id}
                         disabled={warehouse.id === selectedFromWarehouseId}
                       >
