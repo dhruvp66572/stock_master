@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +17,8 @@ export async function GET(request: Request) {
         const categoryId = searchParams.get("categoryId");
         const receiptStatus = searchParams.get("receiptStatus");
         const deliveryStatus = searchParams.get("deliveryStatus");
+
+        const { prisma } = await import("@/lib/prisma");
 
         // Build filter conditions
         const productFilters: any = {};

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +11,8 @@ export async function GET() {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { prisma } = await import("@/lib/prisma");
 
     // Fetch filter options
     const [warehouses, categories] = await Promise.all([

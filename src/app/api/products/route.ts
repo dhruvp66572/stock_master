@@ -1,7 +1,6 @@
 // app/api/products/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
@@ -17,6 +16,8 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search");
     const categoryId = searchParams.get("categoryId");
     const warehouseId = searchParams.get("warehouseId");
+
+    const { prisma } = await import("@/lib/prisma");
 
     const products = await prisma.product.findMany({
       where: {
@@ -72,6 +73,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const { prisma } = await import("@/lib/prisma");
 
     const product = await prisma.product.create({
       data: {

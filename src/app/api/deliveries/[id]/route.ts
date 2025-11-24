@@ -1,7 +1,6 @@
 // app/api/deliveries/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
@@ -15,6 +14,8 @@ export async function GET(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { prisma } = await import("@/lib/prisma");
 
     const delivery = await prisma.delivery.findFirst({
       where: {
@@ -64,6 +65,8 @@ export async function PATCH(
 
     const body = await req.json();
     const { status, warehouseId, notes, scheduleDate, deliveryAddress, operationType } = body;
+
+    const { prisma } = await import("@/lib/prisma");
 
     // First verify ownership
     const existingDelivery = await prisma.delivery.findFirst({
@@ -149,6 +152,8 @@ export async function DELETE(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { prisma } = await import("@/lib/prisma");
 
     await prisma.delivery.delete({
       where: {

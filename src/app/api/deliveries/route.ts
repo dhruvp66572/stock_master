@@ -1,7 +1,6 @@
 // app/api/deliveries/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
@@ -18,6 +17,8 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url);
         const status = searchParams.get('status');
         const search = searchParams.get('search');
+
+        const { prisma } = await import('@/lib/prisma');
 
         const deliveries = await prisma.delivery.findMany({
             where: {
@@ -72,6 +73,8 @@ export async function POST(req: NextRequest) {
                 { status: 400 }
             );
         }
+
+        const { prisma } = await import('@/lib/prisma');
 
         // Generate delivery number
         const count = await prisma.delivery.count();
