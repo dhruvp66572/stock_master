@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { prisma } from "@/lib/prisma";
 
 export async function PUT(
     request: Request,
@@ -15,6 +14,9 @@ export async function PUT(
         }
 
         const id = params.id;
+
+        // Lazy-import prisma
+        const { prisma } = await import("@/lib/prisma");
 
         // Fetch delivery with items and products
         const delivery = await prisma.delivery.findUnique({

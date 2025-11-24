@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { prisma } from "@/lib/prisma";
 import {
   createReceiptSchema,
   getReceiptsQuerySchema,
@@ -32,6 +31,9 @@ export async function POST(request: Request) {
     // Generate receipt number
     const random4 = Math.floor(1000 + Math.random() * 9000);
     const receiptNumber = `RCP-${Date.now()}-${random4}`;
+
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
 
     const created = await prisma.receipt.create({
       data: {
@@ -101,6 +103,9 @@ export async function GET(request: Request) {
     };
     if (parsed.data.status) where.status = parsed.data.status;
     if (parsed.data.warehouseId) where.warehouseId = parsed.data.warehouseId;
+
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
 
     const [receipts, total] = await Promise.all([
       prisma.receipt.findMany({

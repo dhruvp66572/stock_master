@@ -1,7 +1,6 @@
 // app/api/products/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
@@ -15,6 +14,9 @@ export async function GET(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
 
     const product = await prisma.product.findUnique({
       where: { id: params.id },
@@ -47,6 +49,9 @@ export async function PATCH(
 
     const body = await req.json();
 
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
+
     const product = await prisma.product.update({
       where: { id: params.id },
       data: body,
@@ -72,6 +77,9 @@ export async function DELETE(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
 
     await prisma.product.delete({
       where: { id: params.id },

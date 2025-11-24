@@ -1,10 +1,12 @@
 // app/api/warehouses/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
+
     const warehouses = await prisma.warehouse.findMany({
       orderBy: { createdAt: "desc" },
     });
@@ -17,6 +19,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { name, shortCode, location } = await req.json();
+
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
 
     const warehouse = await prisma.warehouse.create({
       data: { name, shortCode, location },

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { prisma } from "@/lib/prisma";
 
 export async function GET(
     request: Request,
@@ -13,6 +12,9 @@ export async function GET(
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        // Lazy-import prisma
+        const { prisma } = await import("@/lib/prisma");
 
         const receipt = await prisma.receipt.findFirst({
             where: {

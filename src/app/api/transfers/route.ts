@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { prisma } from "@/lib/prisma";
 import { transferSchema } from "@/lib/validations/transfer";
 
 export const dynamic = 'force-dynamic';
@@ -42,6 +41,9 @@ export async function GET(request: Request) {
         { notes: { contains: search, mode: "insensitive" } },
       ];
     }
+
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
 
     const transfers = await prisma.transfer.findMany({
       where,
@@ -99,6 +101,9 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const validatedData = transferSchema.parse(body);
+
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
 
     // Check if warehouses exist
     const [fromWarehouse, toWarehouse] = await Promise.all([

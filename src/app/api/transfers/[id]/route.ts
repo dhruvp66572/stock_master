@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { prisma } from "@/lib/prisma";
 
 export async function GET(
     request: Request,
@@ -15,6 +14,9 @@ export async function GET(
         }
 
         const id = params.id;
+
+        // Lazy-import prisma
+        const { prisma } = await import("@/lib/prisma");
 
         const transfer = await prisma.transfer.findFirst({
             where: {
@@ -99,7 +101,10 @@ export async function PUT(
             );
         }
 
-        const transfer = await prisma.transfer.findUnique({
+        // Lazy-import prisma
+        const { prisma } = await import("@/lib/prisma");
+
+        const transfer = await prisma.transfer.findFirst({
             where: { id },
         });
 
@@ -182,6 +187,9 @@ export async function DELETE(
         }
 
         const id = params.id;
+
+        // Lazy-import prisma
+        const { prisma } = await import("@/lib/prisma");
 
         const transfer = await prisma.transfer.findFirst({
             where: {

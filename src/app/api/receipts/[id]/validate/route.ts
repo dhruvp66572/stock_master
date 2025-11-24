@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { prisma } from "@/lib/prisma";
 import { MovementType } from "@prisma/client";
 
 export async function PUT(
@@ -21,6 +20,9 @@ export async function PUT(
         { status: 400 }
       );
     }
+
+    // Lazy-import prisma
+    const { prisma } = await import("@/lib/prisma");
 
     const receipt = await prisma.receipt.findUnique({
       where: { id },
