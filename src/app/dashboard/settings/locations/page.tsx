@@ -33,11 +33,11 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LocationsPage() {
-  const [locations, setLocations] = useState([]);
-  const [warehouses, setWarehouses] = useState([]);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     shortCode: "",
@@ -77,7 +77,7 @@ export default function LocationsPage() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const url = editingId ? `/api/locations/${editingId}` : "/api/locations";
@@ -95,9 +95,8 @@ export default function LocationsPage() {
         closeModal();
         toast({
           title: "Success",
-          description: `Location ${
-            editingId ? "updated" : "created"
-          } successfully`,
+          description: `Location ${editingId ? "updated" : "created"
+            } successfully`,
         });
       } else {
         toast({
@@ -115,7 +114,7 @@ export default function LocationsPage() {
     }
   };
 
-  const handleEdit = async (id) => {
+  const handleEdit = async (id: string) => {
     const response = await fetch(`/api/locations/${id}`);
     const data = await response.json();
     if (data.success) {
@@ -129,7 +128,7 @@ export default function LocationsPage() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Delete this location?")) return;
     try {
       const response = await fetch(`/api/locations/${id}`, {

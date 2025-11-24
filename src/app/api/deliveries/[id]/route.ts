@@ -63,12 +63,26 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const { status, warehouseId, notes, userId, scheduleDate, deliveryAddress, operationType } = body;
+    const { status, warehouseId, notes, scheduleDate, deliveryAddress, operationType } = body;
+
+    // First verify ownership
+    const existingDelivery = await prisma.delivery.findFirst({
+      where: {
+        id: params.id,
+        userId: session.user.id,
+      },
+    });
+
+    if (!existingDelivery) {
+      return NextResponse.json(
+        { error: "Delivery not found" },
+        { status: 404 }
+      );
+    }
 
     const delivery = await prisma.delivery.update({
       where: {
         id: params.id,
-        userId: session.user.id,
       },
       data: {
         ...(status && { status }),
@@ -90,7 +104,7 @@ export async function PATCH(
     });
 
     // If status changed to DONE, update stock based on operation type
-    if (status === "DONE" && userId) {
+    if (status === "DONE") {
       for (const item of delivery.items) {
         // Use operationType from updated delivery or from body
         const operation = delivery.operationType || operationType || "DECREMENT";
@@ -113,7 +127,7 @@ export async function PATCH(
             type: "DELIVERY",
             quantity: isIncrement ? item.quantity : -item.quantity,
             referenceId: delivery.id,
-            userId: userId,
+            userId: session.user.id,
           },
         });
       }

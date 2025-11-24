@@ -183,8 +183,11 @@ export async function DELETE(
 
         const id = params.id;
 
-        const transfer = await prisma.transfer.findUnique({
-            where: { id },
+        const transfer = await prisma.transfer.findFirst({
+            where: {
+                id,
+                userId: session.user?.id,
+            },
         });
 
         if (!transfer) {
@@ -203,7 +206,10 @@ export async function DELETE(
         }
 
         await prisma.transfer.delete({
-            where: { id },
+            where: {
+                id,
+                userId: session.user.id,
+            },
         });
 
         return NextResponse.json({

@@ -12,6 +12,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { Suspense } from "react";
 
 const errorMessages: Record<string, string> = {
     CredentialsSignin: "Invalid email or password. Please try again.",
@@ -21,7 +22,7 @@ const errorMessages: Record<string, string> = {
     Default: "An error occurred during authentication. Please try again.",
 };
 
-export default function AuthErrorPage() {
+function ErrorContent() {
     const searchParams = useSearchParams();
     const error = searchParams.get("error");
 
@@ -63,5 +64,17 @@ export default function AuthErrorPage() {
                 </CardFooter>
             </Card>
         </div>
+    );
+}
+
+export default function AuthErrorPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-50">
+                <div className="text-center">Loading...</div>
+            </div>
+        }>
+            <ErrorContent />
+        </Suspense>
     );
 }

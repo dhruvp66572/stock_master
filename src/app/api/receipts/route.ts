@@ -7,6 +7,8 @@ import {
   getReceiptsQuerySchema,
 } from "@/lib/validations/receipt";
 
+export const dynamic = 'force-dynamic';
+
 // POST - create a new receipt (DRAFT)
 export async function POST(request: Request) {
   try {

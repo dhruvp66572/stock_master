@@ -31,6 +31,6 @@ export interface DashboardFilters {
 export interface FilterState {
   warehouseId: string;
   categoryId: string;
-  receiptStatus: ReceiptStatus | "";
-  deliveryStatus: DeliveryStatus | "";
+  receiptStatus: ReceiptStatus | "" | "all";
+  deliveryStatus: DeliveryStatus | "" | "all";
 }

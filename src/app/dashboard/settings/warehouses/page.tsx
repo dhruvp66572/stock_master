@@ -26,10 +26,10 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
 export default function WarehousesPage() {
-  const [warehouses, setWarehouses] = useState([]);
+  const [warehouses, setWarehouses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     shortCode: "",
@@ -58,7 +58,7 @@ export default function WarehousesPage() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const url = editingId
@@ -78,9 +78,8 @@ export default function WarehousesPage() {
         closeModal();
         toast({
           title: "Success",
-          description: `Warehouse ${
-            editingId ? "updated" : "created"
-          } successfully`,
+          description: `Warehouse ${editingId ? "updated" : "created"
+            } successfully`,
         });
       } else {
         toast({
@@ -98,7 +97,7 @@ export default function WarehousesPage() {
     }
   };
 
-  const handleEdit = async (id) => {
+  const handleEdit = async (id: string) => {
     const response = await fetch(`/api/warehouses/${id}`);
     const data = await response.json();
     if (data.success) {
@@ -112,7 +111,7 @@ export default function WarehousesPage() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Delete this warehouse?")) return;
     try {
       const response = await fetch(`/api/warehouses/${id}`, {

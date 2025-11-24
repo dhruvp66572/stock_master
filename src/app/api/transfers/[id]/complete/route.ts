@@ -143,11 +143,19 @@ export async function PUT(
               },
             });
           } else {
+            // Find unique SKU for destination warehouse
+            let newSku = item.product.sku;
+            let suffix = 1;
+            while (await tx.product.findFirst({ where: { sku: newSku, warehouseId: transfer.toWarehouseId } })) {
+              newSku = `${item.product.sku}-W${suffix}`;
+              suffix++;
+            }
+
             // Create new product in destination warehouse
             const newProduct = await tx.product.create({
               data: {
                 name: item.product.name,
-                sku: `${item.product.sku}-${transfer.toWarehouseId.slice(-4)}`, // Make SKU unique
+                sku: newSku,
                 description: item.product.description,
                 categoryId: item.product.categoryId,
                 unitOfMeasure: item.product.unitOfMeasure,

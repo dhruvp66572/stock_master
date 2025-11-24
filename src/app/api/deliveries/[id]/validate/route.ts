@@ -43,24 +43,26 @@ export async function PUT(
             );
         }
 
-        // Check stock availability for all items
+        // Check stock availability only for DECREMENT operations
         const stockErrors: string[] = [];
-        for (const item of delivery.items) {
-            if (item.product.stock < item.quantity) {
-                stockErrors.push(
-                    `Insufficient stock for ${item.product.sku}: Available ${item.product.stock}, Requested ${item.quantity}`
+        if (delivery.operationType === "DECREMENT") {
+            for (const item of delivery.items) {
+                if (item.product.stock < item.quantity) {
+                    stockErrors.push(
+                        `Insufficient stock for ${item.product.sku}: Available ${item.product.stock}, Requested ${item.quantity}`
+                    );
+                }
+            }
+
+            if (stockErrors.length > 0) {
+                return NextResponse.json(
+                    {
+                        error: "Insufficient stock for delivery validation",
+                        details: stockErrors,
+                    },
+                    { status: 400 }
                 );
             }
-        }
-
-        if (stockErrors.length > 0) {
-            return NextResponse.json(
-                {
-                    error: "Insufficient stock for delivery validation",
-                    details: stockErrors,
-                },
-                { status: 400 }
-            );
         }
 
         // Execute transaction: update delivery, decrease stock, create stock movements
@@ -75,14 +77,15 @@ export async function PUT(
                     },
                 });
 
-                // 2. Decrease product stock for all items (parallel)
+                // 2. Update product stock based on operation type (parallel)
+                const isIncrement = delivery.operationType === "INCREMENT";
                 const stockUpdatePromises = delivery.items.map((item) =>
                     tx.product.update({
                         where: { id: item.productId },
                         data: {
-                            stock: {
-                                decrement: item.quantity,
-                            },
+                            stock: isIncrement
+                                ? { increment: item.quantity }
+                                : { decrement: item.quantity },
                         },
                     })
                 );
@@ -92,12 +95,12 @@ export async function PUT(
                     tx.stockMovement.create({
                         data: {
                             type: "DELIVERY",
-                            quantity: -item.quantity, // Negative for stock decrease
+                            quantity: isIncrement ? item.quantity : -item.quantity,
                             referenceId: delivery.id,
                             productId: item.productId,
                             warehouseId: delivery.warehouseId,
                             userId: session.user.id,
-                            notes: `Delivery ${delivery.deliveryNumber} validated`,
+                            notes: `Delivery ${delivery.deliveryNumber} validated (${delivery.operationType})`,
                         },
                     })
                 );
