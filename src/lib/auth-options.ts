@@ -1,6 +1,8 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "@/lib/prisma";
+// Note: prisma is imported lazily inside authorize to avoid instantiating
+// PrismaClient at module import time (which can cause issues during Next.js
+// build/prerender when environment variables or runtime aren't available).
 import { verifyPassword } from "@/lib/auth";
 
 export const authOptions: NextAuthOptions = {
@@ -17,6 +19,9 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 try {
+                    // Lazy-import prisma to avoid creating PrismaClient during build
+                    const { prisma } = await import("@/lib/prisma");
+
                     // Find user by email
                     const user = await prisma.user.findUnique({
                         where: { email: credentials.email },
