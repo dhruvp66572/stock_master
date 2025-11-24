@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { generateOTP } from "@/lib/auth";
 import { sendOTPEmail } from "@/lib/email";
 import { forgotPasswordSchema } from "@/lib/validations/auth";
@@ -17,6 +16,9 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
+
+        // Lazy-import prisma to avoid build-time instantiation
+        const { prisma } = await import("@/lib/prisma");
 
         // Find user
         const user = await prisma.user.findUnique({
