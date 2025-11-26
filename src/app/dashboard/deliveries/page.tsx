@@ -43,22 +43,44 @@ export default function DeliveriesPage() {
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
   const [warehouses, setWarehouses] = useState<any[]>([]);
 
+  // Helper to normalize various API shapes into an array
+  const normalizeArray = (payload: any): any[] => {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload.items)) return payload.items;
+    if (Array.isArray(payload.results)) return payload.results;
+    // Sometimes API returns { results: { data: [...] } } etc, try further unwrap
+    if (payload.data && Array.isArray(payload.data.data)) return payload.data.data;
+    return [];
+  };
+
   useEffect(() => {
     fetchDeliveries();
-    fetchWarehouses();
   }, [statusFilter, searchTerm]);
+
+  useEffect(() => {
+    // Fetch warehouses once on mount
+    fetchWarehouses();
+  }, []);
 
   const fetchWarehouses = async () => {
     try {
       const response = await fetch("/api/warehouses");
       const data = await response.json();
-      if (data.success) setWarehouses(data.data);
+      if (data && data.success) {
+        setWarehouses(normalizeArray(data.data));
+      } else {
+        setWarehouses([]);
+      }
     } catch (error) {
       console.error("Error:", error);
+      setWarehouses([]);
     }
   };
 
   const fetchDeliveries = async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams();
       if (statusFilter && statusFilter !== "all")
@@ -67,10 +89,15 @@ export default function DeliveriesPage() {
 
       const response = await fetch(`/api/deliveries?${params}`);
       const data = await response.json();
-      if (data.success) setDeliveries(data.data);
+      if (data && data.success) {
+        setDeliveries(normalizeArray(data.data));
+      } else {
+        setDeliveries([]);
+      }
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to fetch deliveries");
+      setDeliveries([]);
     } finally {
       setLoading(false);
     }
